@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CyberSec Incident Manager</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <div><p class="eyebrow">OUTIL PÉDAGOGIQUE LOCAL</p><h1>CyberSec Incident Manager</h1>
+  <p>Suivi d’incidents fictifs · Démonstration M1 Cybersécurité</p></div>
+  <span class="pill">V1 améliorée</span>
+</header>
+<main>
+  <section class="stats" aria-label="Indicateurs">
+    <article><span>Incidents ouverts</span><strong>{{ stats.ouverts }}</strong></article>
+    <article><span>Critiques non résolus</span><strong>{{ stats.critiques }}</strong></article>
+    <article><span>Incidents résolus</span><strong>{{ stats.resolus }}</strong></article>
+  </section>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<section class="messages" aria-live="polite">
+      {% for category, message in messages %}<p class="{{ category }}">{{ message }}</p>{% endfor %}
+    </section>{% endif %}
+  {% endwith %}
+  <div class="columns">
+    <section class="panel">
+      <h2>Déclarer un incident</h2>
+      <form method="post" action="{{ url_for('add_incident') }}">
+        <label for="titre">Titre <span>(obligatoire, 120 caractères max.)</span></label>
+        <input id="titre" name="titre" maxlength="120" required>
+        <label for="description">Description <span>(2 000 caractères max.)</span></label>
+        <textarea id="description" name="description" maxlength="2000" rows="4"></textarea>
+        <label for="categorie">Catégorie</label>
+        <select id="categorie" name="categorie" required>{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select>
+        <label for="gravite">Gravité</label>
+        <select id="gravite" name="gravite" required>{% for g in gravites %}<option>{{ g }}</option>{% endfor %}</select>
+        <button type="submit">Enregistrer l’incident</button>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-heading"><h2>Incidents enregistrés</h2><span>{{ incidents|length }} résultat(s)</span></div>
+      <form class="filters" method="get" action="{{ url_for('index') }}">
+        <label for="fstatut">Statut</label><select id="fstatut" name="statut"><option value="">Tous</option>{% for s in statuts %}<option {% if selected_statut == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+        <label for="fgravite">Gravité</label><select id="fgravite" name="gravite"><option value="">Toutes</option>{% for g in gravites %}<option {% if selected_gravite == g %}selected{% endif %}>{{ g }}</option>{% endfor %}</select>
+        <button type="submit" class="secondary">Filtrer</button><a href="{{ url_for('index') }}">Réinitialiser</a>
+      </form>
+      <div class="table-wrap"><table><thead><tr><th>ID / Date</th><th>Incident</th><th>Gravité</th><th>Statut / action</th></tr></thead><tbody>
+      {% for i in incidents %}
+        <tr><td>#{{ i.id }}<small>{{ i.created_at }}</small></td><td><strong>{{ i.titre }}</strong><small>{{ i.categorie }}</small>{% if i.description %}<p class="desc">{{ i.description }}</p>{% endif %}</td>
+        <td><span class="severity {{ i.gravite|lower }}">{{ i.gravite }}</span></td>
+        <td><form method="post" action="{{ url_for('update_status', incident_id=i.id) }}" class="status-form"><select name="statut" aria-label="Statut incident {{ i.id }}">{% for s in statuts %}<option {% if i.statut == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select><button class="secondary" type="submit">Mettre à jour</button></form></td></tr>
+      {% else %}<tr><td colspan="4" class="empty">Aucun incident pour ces filtres.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+  </div>
+  <p class="notice">Limites : cette démonstration ne fournit pas d’authentification ni de contrôle d’accès robuste. N’utiliser que des données fictives et ne pas exposer l’application sur Internet.</p>
+</main>
+<footer>CyberSec Incident Manager · Projet pédagogique Scrum</footer>
+</body></html>
